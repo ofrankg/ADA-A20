@@ -50,14 +50,22 @@ class Nodo {
 
 class Arista{
     Nodo n1, n2;
+    boolean directed = false;
 
     public Arista(Nodo newn1, Nodo newn2){
         this.n1 = newn1;
         this.n2 = newn2;
     }
 
+    public void direction(boolean a){
+        this.directed = a;
+    }    
+
     public String toString(){
-        return this.n1.nombre + "--" + this.n2.nombre;
+        if (this.directed){
+			return this.n1.nombre + "->" + this.n2.nombre;
+        }
+        else	return this.n1.nombre + "--" + this.n2.nombre;
     }
 
 }
@@ -199,41 +207,58 @@ class Grafo {
     public static Grafo grafo_barabasi_albert(int n, int d, boolean dir, boolean auto){
         HashMap <Integer, Nodo> V = new HashMap <Integer, Nodo>();
         HashMap <String, Arista> E = new HashMap <String, Arista>();
-        int nodes=0;
+        int nodes;
 		float edgep = 0;
+		int value;
+
+		float pedge;
+        Random ranedge = new Random();
 
         for (int i=0; i<n; i++){
             Nodo v = new Nodo("nodo_" + i);
             V.put(i, v);
         }
-        
-//        while (nodes < n){
-		for (Integer value : V.keySet()) {
-			nodes = 0;
-			while (nodes < value){
-	            if(value == nodes & !auto){
-		            //System.out.println(value.nombre + " -- " + V.get(nodes));
-					nodes++;
-					continue;
-		        }
-		        if(!dir & ( E.containsKey(Integer.toString(value) + Integer.toString(nodes)) || E.containsKey(Integer.toString(nodes) + Integer.toString(value)) ) ){
-		            //System.out.println("nodes already" + V.get(value) + "--" + V.get(nodes));
-					nodes++;	
+
+        Random ran = new Random();
+
+		for (nodes = 0; nodes <= d; nodes++) {
+			for (value=0; value < nodes; value++){
+                if(value == nodes & !auto){ // no autoconexiones
+                    continue;
+                }
+                
+                if(!dir & ( E.containsKey(Integer.toString(value) + Integer.toString(nodes)) || E.containsKey(Integer.toString(nodes) + Integer.toString(value)) ) ){ // no nodo dirigido
 		            continue;
             	}
-				//System.out.println(V.get(value).getdegree());				
-				edgep = 1 - ( V.get(value).getdegree()/d );
-				//System.out.println(value.nombre + " x: " + value.x + " y: "+ value.y);
-				//System.out.println(V.get(nodes).nombre + " x: " + V.get(nodes).x + " y: "+ V.get(nodes).y);
-				//System.out.println("distance " + distance + " comp " + d);
-				if (edgep > 0) {
-					V.get(value).add_degree();
+				V.get(value).add_degree();
+				V.get(nodes).add_degree();
+				E.put(Integer.toString(nodes)+Integer.toString(value), new Arista(V.get(nodes), V.get(value)) );
+            }
+        }
+
+		for (nodes = d+1; nodes < n; nodes++) {
+			for (value=0; value < nodes; value++){
+			//for (int k=0; k < nodes; k++){
+                value = ran.nextInt(nodes);
+                if(value == nodes & !auto){ // no autoconexiones
+                    continue;
+                }
+                
+                if(!dir & ( E.containsKey(Integer.toString(value) + Integer.toString(nodes)) || E.containsKey(Integer.toString(nodes) + Integer.toString(value)) ) ){ // no nodo dirigido
+		            continue;
+            	}
+
+				edgep = 1-(float) V.get(nodes).getdegree()/ (float)d;
+				pedge = ranedge.nextFloat();			
+
+				if (edgep>pedge){
+					V.get(value).add_degree(); 				
 					V.get(nodes).add_degree();
-					E.put(Integer.toString(value)+Integer.toString(nodes), new Arista(V.get(value), V.get(nodes)) );
+					E.put(Integer.toString(nodes)+Integer.toString(value), new Arista(V.get(nodes), V.get(value)) );
 				}
-				nodes++;
-			}
-		}
+            }
+        }
+
 		//System.out.println(E);
         Grafo temp = new Grafo(V,E);
         return temp;
@@ -266,7 +291,7 @@ class Grafo {
         int m = Integer.parseInt(args[1]);
 		float p = Float.parseFloat(args[2]);
 
-        String filepath = "/home/oswald/Documents/A20/ADA-15A7159/tareas/P1/";
+        String filepath = "/home/oswald/Documents/A20/ADA-15A7159/tareas/";
 		String filename;
 
         graph = Grafo.grafo_erdos_renyi(n, m, false, false);
