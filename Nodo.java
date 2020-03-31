@@ -1,4 +1,5 @@
 import java.util.HashMap;
+import java.util.Comparator;
 import java.io.*;
 //
 class Nodo {
@@ -43,3 +44,13 @@ class Nodo {
 }
 
 
+class NodoComparator implements Comparator<Nodo>{ 
+	public int compare(Nodo n1, Nodo n2) { 
+		float dn1 = Float.parseFloat(n1.getData("dist"));
+		float dn2 = Float.parseFloat(n2.getData("dist"));
+		
+		if ( dn1 > dn2 )	return 1; 
+		else if ( dn1 == dn2) return 0; 
+		else	return -1;
+	}                 
+}
