@@ -41,10 +41,12 @@ public class Grafo {
 		int seed = 1;
 
         Random ran = new Random();
+        Random rancolor = new Random();
 
         for (int i=0; i<n; i++){
             Nodo v = new Nodo("nodo_" + i);
             V.put("nodo_"+i, v);
+            v.setData("color", String.format("#%06x", rancolor.nextInt(256*256*256)));
         }
  
         while (edges < m){
@@ -442,22 +444,41 @@ public class Grafo {
 	public void logFile(String filePath, String fileName,  Grafo grafo, boolean DisNode) throws IOException {
 		FileWriter fileWriter = new FileWriter(filePath + fileName + ".DOT");
 		PrintWriter printWriter = new PrintWriter(fileWriter);
+		Nodo nodoA, nodoB;
+		Arista aristaAB;
+					
 		printWriter.printf("graph " + fileName + " {");
 		printWriter.println();
+        
         HashMap <String, Nodo> Vi = new HashMap <String, Nodo>();
+        
         Vi = grafo.V;
 
 		for(String value : grafo.E.keySet()){
-			printWriter.printf("%s;",grafo.E.get(value).getNodos()[0].getName() + "--" + grafo.E.get(value).getNodos()[1].getName());
+			aristaAB = grafo.E.get(value);
+			nodoA = aristaAB.getNodos()[0];
+			nodoB = aristaAB.getNodos()[1];
+			printWriter.printf("%s;",nodoA.getName() + "--" + nodoB.getName() + " [weight=" + aristaAB.getData("weight") + ", color=black]");
 			printWriter.println();
-			Vi.remove(grafo.E.get(value).getNodos()[0].getName());
-			Vi.remove(grafo.E.get(value).getNodos()[1].getName());
+			Vi.remove(nodoA.getName());
+			Vi.remove(nodoB.getName());
+		}
+		
+		for(String value : grafo.E.keySet()){
+			aristaAB = grafo.E.get(value);
+			nodoA = aristaAB.getNodos()[0];
+			nodoB = aristaAB.getNodos()[1];
+			printWriter.printf("%s",nodoA.getName() + " [color=\"" + nodoA.getData("color") + "\"];");
+			printWriter.println();
+			printWriter.printf("%s",nodoB.getName() + " [color=\"" + nodoB.getData("color") + "\"];");
+			printWriter.println();
 		}
         
         // nodos que no se encuentran en una arista
         if (DisNode) {
 			for(String value : Vi.keySet()){
-				printWriter.printf("%s;", Vi.get(value).getName());
+				nodoA = Vi.get(value);
+				printWriter.printf("%s",nodoA.getName() + " [color=\"" + nodoA.getData("color") + "\"];");
 				printWriter.println();
 			}
 		}
@@ -474,7 +495,7 @@ public class Grafo {
 	    int n=0;
 	    int m=0;
 	    float p=(float)0.0;
-		Grafo graph, treeB, treeD;
+		Grafo graph, treeB, treeD, Djk;
 		
 		if (args.length != 4){
 			System.out.println("Ejecutar java Grafo <erdos, gilbert, geo, bara> <n> <m/p/d> <x>"  );
@@ -506,12 +527,16 @@ public class Grafo {
 				else	return;
 				treeB = graph.BFS(graph.V.get(node));
 				treeD = graph.BFS(graph.V.get(node));
+				graph.randomEdgesValues( (float)0.1, (float)0.9 );
+				Djk = graph.dijkstra(graph.V.get(node));
 				filename = "grafo_"+ args[0] +"_" + n;
 				graph.logFile(filepath, filename, graph, true);
 				filename = args[0]+ "_bfs_" + n;
 				graph.logFile(filepath, filename, treeB, false);
 				filename = args[0]+ "_dfs_" + n;
 				graph.logFile(filepath, filename, treeD, false);
+				filename = args[0]+ "_dijkstra_" + n;
+				graph.logFile(filepath, filename, Djk, false);
 			}
 			
 			else{
